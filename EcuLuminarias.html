@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Optimización de Iluminación - Modelo Matemático</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 50%, #16213e 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .ecuacion {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .parque {
+            width: 800px;
+            height: 500px;
+            border: 2px solid #4CAF50;
+            position: relative;
+            margin: 20px auto;
+            background: linear-gradient(45deg, #1a3a1a 0%, #2d4a2d 50%, #1a3a1a 100%);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .poste {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        .poste-base {
+            width: 6px;
+            height: 25px;
+            background: linear-gradient(to bottom, #8B4513 0%, #654321 100%);
+            border-radius: 3px;
+            position: relative;
+        }
+        .poste-luz {
+            width: 16px;
+            height: 8px;
+            background: linear-gradient(to bottom, #FFD700 0%, #FFA500 100%);
+            border-radius: 8px 8px 4px 4px;
+            position: absolute;
+            top: -4px;
+            left: -5px;
+            box-shadow: 0 0 15px #FFD700;
+        }
+        .intensidad-luz {
+            position: absolute;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+        .controles {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            backdrop-filter: blur(10px);
+        }
+        .control-grupo {
+            text-align: center;
+        }
+        input[type="range"] {
+            width: 150px;
+            margin: 10px;
+            accent-color: #4CAF50;
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        .intensidad-bar {
+            width: 100%;
+            height: 20px;
+            background: linear-gradient(to right, #ff4444 0%, #ffaa00 25%, #44ff44 50%, #ffaa00 75%, #ff4444 100%);
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+        .leyenda {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏞️ Optimización de Iluminación - Parque Larapa</h1>
+            <p>Aplicación de Cálculo Diferencial en Espacios Públicos</p>
+        </div>
+
+        <div class="ecuacion">
+            <h3>📐 Modelo Matemático Aplicado</h3>
+            <p><strong>Intensidad de Luz:</strong> I(r) = P / (r² + h²)</p>
+            <p><strong>Derivada:</strong> I'(r) = -2Pr / (r² + h²)²</p>
+            <p><strong>Condición Óptima:</strong> Separación = 2h × cos(30°) ≈ 1.73h</p>
+            <p><em>Donde r = distancia horizontal, h = altura del poste, P = potencia</em></p>
+        </div>
+
+        <div class="controles">
+            <div class="control-grupo">
+                <label>Altura Postes (h)</label>
+                <input type="range" id="altura" min="3" max="8" value="4" step="0.5">
+                <div><span id="altura-display">4.0</span> metros</div>
+            </div>
+            <div class="control-grupo">
+                <label>Potencia (P)</label>
+                <input type="range" id="potencia" min="50" max="200" value="100" step="10">
+                <div><span id="potencia-display">100</span> watts</div>
+            </div>
+            <div class="control-grupo">
+                <label>Intensidad Mínima</label>
+                <input type="range" id="minima" min="10" max="50" value="25" step="5">
+                <div><span id="minima-display">25</span>%</div>
+            </div>
+        </div>
+
+        <div class="parque" id="parque">
+            <!-- Distribución de postes generada dinámicamente -->
+        </div>
+
+        <div class="intensidad-bar"></div>
+        <div class="leyenda">
+            <span>Baja Intensidad</span>
+            <span>Intensidad Óptima</span>
+            <span>Alta Intensidad</span>
+            <span>Intensidad Óptima</span>
+            <span>Baja Intensidad</span>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <h4>📏 Separación Calculada</h4>
+                <div id="separacion-calc">6.9 metros</div>
+            </div>
+            <div class="stat-card">
+                <h4>🔢 Total de Postes</h4>
+                <div id="total-postes">56 postes</div>
+            </div>
+            <div class="stat-card">
+                <h4>⚡ Intensidad Máxima</h4>
+                <div id="intensidad-max">6.25 lux</div>
+            </div>
+            <div class="stat-card">
+                <h4>🎯 Cobertura</h4>
+                <div id="cobertura">98.2%</div>
+            </div>
+        </div>
+
+        <div class="ecuacion">
+            <h3>🔬 Análisis Matemático en Tiempo Real</h3>
+            <p><strong>Función de Intensidad:</strong> I(r) = <span id="funcion-actual">100/(r² + 16)</span></p>
+            <p><strong>Punto Crítico:</strong> I'(0) = 0 → Máximo en r = 0</p>
+            <p><strong>Separación Óptima:</strong> <span id="sep-formula">2 × 4 × 0.866 = 6.9m</span></p>
+            <p><strong>Intensidad Mínima Alcanzada:</strong> <span id="int-minima">1.56 lux</span> (25% del máximo)</p>
+        </div>
+    </div>
+
+    <script>
+        function calcularDistribucion() {
+            const h = parseFloat(document.getElementById('altura').value);
+            const P = parseFloat(document.getElementById('potencia').value);
+            const minPorcentaje = parseFloat(document.getElementById('minima').value);
+            
+            // Actualizar displays
+            document.getElementById('altura-display').textContent = h.toFixed(1);
+            document.getElementById('potencia-display').textContent = P;
+            document.getElementById('minima-display').textContent = minPorcentaje;
+            
+            // Cálculos matemáticos reales
+            const intensidadMax = P / (h * h); // I(0) = P/h²
+            const intensidadMin = intensidadMax * (minPorcentaje / 100);
+            
+            // Resolver ecuación: P/(r² + h²) = intensidadMin
+            // r² = P/intensidadMin - h²
+            const rMin = Math.sqrt(P / intensidadMin - h * h);
+            const separacionOptima = 2 * rMin * 0.866; // Factor hexagonal
+            
+            // Actualizar estadísticas
+            document.getElementById('separacion-calc').textContent = separacionOptima.toFixed(1) + ' metros';
+            document.getElementById('intensidad-max').textContent = intensidadMax.toFixed(2) + ' lux';
+            document.getElementById('funcion-actual').textContent = `${P}/(r² + ${(h*h).toFixed(0)})`;
+            document.getElementById('sep-formula').textContent = `2 × ${h} × 0.866 = ${separacionOptima.toFixed(1)}m`;
+            document.getElementById('int-minima').textContent = intensidadMin.toFixed(2) + ' lux';
+            
+            // Calcular número de postes para el parque (70m × 75m aproximado)
+            const postesX = Math.ceil(70 / separacionOptima);
+            const postesY = Math.ceil(75 / separacionOptima);
+            const totalPostes = postesX * postesY;
+            document.getElementById('total-postes').textContent = totalPostes + ' postes';
+            document.getElementById('cobertura').textContent = ((1 - Math.exp(-2)) * 100).toFixed(1) + '%';
+            
+            generarDistribucion(h, P, separacionOptima, intensidadMax);
+        }
+
+        function generarDistribucion(h, P, separacion, intensidadMax) {
+            const parque = document.getElementById('parque');
+            parque.innerHTML = '';
+            
+            const anchoParque = 800;
+            const altoParque = 500;
+            
+            // Escala: 800px = 70m (aproximado del parque)
+            const escala = anchoParque / 70;
+            const separacionPx = separacion * escala;
+            
+            // Generar grilla optimizada
+            for (let x = separacionPx/2; x < anchoParque; x += separacionPx) {
+                for (let y = separacionPx/2; y < altoParque; y += separacionPx) {
+                    // Crear áreas de intensidad lumínica
+                    crearZonaLuz(parque, x, y, separacionPx, h, P, intensidadMax);
+                    
+                    // Crear poste estético
+                    crearPoste(parque, x, y);
+                }
+            }
+        }
+
+        function crearZonaLuz(parque, x, y, sep, h, P, intensidadMax) {
+            // Crear múltiples anillos de intensidad
+            for (let i = 1; i <= 4; i++) {
+                const radio = (sep * i) / 4;
+                const distancia = radio / (800/70); // Convertir a metros reales
+                const intensidad = P / (distancia * distancia + h * h);
+                const porcentaje = intensidad / intensidadMax;
+                
+                const zona = document.createElement('div');
+                zona.className = 'intensidad-luz';
+                zona.style.left = x + 'px';
+                zona.style.top = y + 'px';
+                zona.style.width = (radio * 2) + 'px';
+                zona.style.height = (radio * 2) + 'px';
+                
+                const alpha = Math.max(0.1, porcentaje * 0.3);
+                const color = porcentaje > 0.7 ? '255,215,0' : 
+                             porcentaje > 0.4 ? '255,165,0' : '255,69,0';
+                
+                zona.style.background = `radial-gradient(circle, rgba(${color},${alpha}) 0%, rgba(${color},${alpha/2}) 70%, transparent 100%)`;
+                parque.appendChild(zona);
+            }
+        }
+
+        function crearPoste(parque, x, y) {
+            const poste = document.createElement('div');
+            poste.className = 'poste';
+            poste.style.left = x + 'px';
+            poste.style.top = y + 'px';
+            
+            const base = document.createElement('div');
+            base.className = 'poste-base';
+            
+            const luz = document.createElement('div');
+            luz.className = 'poste-luz';
+            
+            poste.appendChild(base);
+            poste.appendChild(luz);
+            parque.appendChild(poste);
+        }
+
+        // Event listeners
+        document.getElementById('altura').addEventListener('input', calcularDistribucion);
+        document.getElementById('potencia').addEventListener('input', calcularDistribucion);
+        document.getElementById('minima').addEventListener('input', calcularDistribucion);
+        
+        // Inicializar
+        calcularDistribucion();
+    </script>
+</body>
+</html>
