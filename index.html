@@ -3,1005 +3,405 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Optimización de Iluminación Urbana</title>
+    <title>Optimización de Iluminación</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 30%, #16213e 70%, #0f3460 100%);
-            color: #ffffff;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        
-        .container {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 0;
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(45deg, #00f5ff, #0080ff, #8000ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            font-size: 1.1rem;
-            opacity: 0.8;
-            color: #b0c4de;
-        }
-        
-        .dashboard {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .controls-panel {
-            background: rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
-            height: fit-content;
-        }
-        
-        .controls-panel h3 {
-            margin-bottom: 25px;
-            color: #00f5ff;
-            font-size: 1.3rem;
-        }
-        
-        .control-group {
-            margin-bottom: 25px;
-        }
-        
-        .control-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #e0e6ed;
-        }
-        
-        .slider-container {
-            position: relative;
-            margin: 15px 0;
-        }
-        
-        input[type="range"] {
-            width: 100%;
-            height: 8px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: linear-gradient(to right, #333, #666);
-            border-radius: 4px;
-            outline: none;
-        }
-        
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: linear-gradient(45deg, #00f5ff, #0080ff);
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
-        }
-        
-        .value-display {
-            background: rgba(0, 245, 255, 0.1);
-            border: 1px solid rgba(0, 245, 255, 0.3);
-            border-radius: 8px;
-            padding: 8px 15px;
-            text-align: center;
-            font-weight: 600;
-            color: #00f5ff;
-            margin-top: 10px;
-        }
-        
-        .simulation-area {
-            background: rgba(255,255,255,0.05);
-            border-radius: 20px;
-            padding: 20px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .parque {
-            width: 100%;
-            height: 500px;
-            border: 2px solid #00f5ff;
-            position: relative;
-            background: 
-                radial-gradient(circle at 20% 30%, rgba(0, 50, 0, 0.4) 0%, transparent 50%),
-                radial-gradient(circle at 80% 70%, rgba(0, 80, 0, 0.3) 0%, transparent 50%),
-                linear-gradient(45deg, #0a2a0a 0%, #1a4a1a 50%, #0a2a0a 100%);
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 
-                inset 0 0 50px rgba(0, 245, 255, 0.1),
-                0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        
-        .poste {
-            position: absolute;
-            transform: translate(-50%, -50%);
-            z-index: 20;
-            transition: all 0.3s ease;
-        }
-        
-        .poste:hover {
-            transform: translate(-50%, -50%) scale(1.2);
-        }
-        
-        .poste-estructura {
-            width: 4px;
-            background: linear-gradient(to bottom, #8B4513 0%, #654321 50%, #4A2C2A 100%);
-            border-radius: 2px;
-            position: relative;
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-        }
-        
-        .poste-luminaria {
-            width: 20px;
-            height: 12px;
-            background: linear-gradient(to bottom, #FFD700 0%, #FFA500 50%, #FF8C00 100%);
-            border-radius: 10px 10px 5px 5px;
-            position: absolute;
-            top: -6px;
-            left: -8px;
-            box-shadow: 
-                0 0 20px #FFD700,
-                0 0 40px rgba(255, 215, 0, 0.3);
-            animation: pulso 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes pulso {
-            0% { box-shadow: 0 0 20px #FFD700, 0 0 40px rgba(255, 215, 0, 0.3); }
-            100% { box-shadow: 0 0 30px #FFD700, 0 0 60px rgba(255, 215, 0, 0.5); }
-        }
-        
-        .zona-luz {
-            position: absolute;
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            transition: all 0.3s ease;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin: 30px 0;
-        }
-        
-        .stat-card {
-            background: rgba(255,255,255,0.08);
-            border-radius: 15px;
-            padding: 25px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
-            text-align: center;
-            transition: transform 0.3s ease;
-        }
-        
-        .stat-card:hover {
-            transform: translateY(-5px);
-        }
-        
-        .stat-icon {
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-        }
-        
-        .stat-value {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #00f5ff;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            color: #b0c4de;
-            font-size: 0.9rem;
-        }
-        
-        .ecuacion-panel {
-            background: rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
-            margin: 30px 0;
-        }
-        
-        .ecuacion-panel h3 {
-            color: #00f5ff;
-            margin-bottom: 20px;
-            font-size: 1.4rem;
-        }
-        
-        .formula {
-            background: rgba(0, 0, 0, 0.3);
-            border-left: 4px solid #00f5ff;
-            padding: 15px 20px;
-            margin: 15px 0;
-            border-radius: 0 10px 10px 0;
-            font-family: 'Courier New', monospace;
-            font-size: 1.1rem;
-        }
-        
-        .comparacion {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 20px 0;
-        }
-        
-        .comp-card {
-            background: rgba(255,255,255,0.05);
-            border-radius: 10px;
-            padding: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .eficiencia-bar {
-            height: 10px;
-            background: linear-gradient(to right, #ff4444 0%, #ffaa00 50%, #44ff44 100%);
-            border-radius: 5px;
-            margin: 15px 0;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .eficiencia-indicator {
-            position: absolute;
-            top: -5px;
-            width: 4px;
-            height: 20px;
-            background: #00f5ff;
-            border-radius: 2px;
-            transition: left 0.3s ease;
-            box-shadow: 0 0 10px #00f5ff;
-        }
-
-        .recomendaciones-panel {
-            background: rgba(255,255,255,0.08);
-            border-radius: 20px;
-            padding: 30px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.15);
-            margin: 30px 0;
-        }
-
-        .recomendaciones-panel h3 {
-            color: #00f5ff;
-            margin-bottom: 25px;
-            font-size: 1.4rem;
-        }
-
-        .terreno-selector {
-            margin-bottom: 20px;
-        }
-
-        .terreno-selector label {
-            display: block;
-            margin-bottom: 10px;
-            color: #e0e6ed;
-            font-weight: 500;
-        }
-
-        .terreno-selector select {
-            width: 100%;
-            padding: 12px 15px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(0, 245, 255, 0.3);
-            border-radius: 10px;
-            color: #ffffff;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        .terreno-selector select:focus {
-            border-color: #00f5ff;
-            box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
-        }
-
-        .dimensiones-input {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin: 20px 0;
-        }
-
-        .dimension-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: #e0e6ed;
-            font-weight: 500;
-        }
-
-        .dimension-group input {
-            width: 100%;
-            padding: 12px 15px;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(0, 245, 255, 0.3);
-            border-radius: 10px;
-            color: #ffffff;
-            font-size: 1rem;
-            outline: none;
-        }
-
-        .dimension-group input:focus {
-            border-color: #00f5ff;
-            box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
-        }
-
-        .btn-recomendacion {
-            width: 100%;
-            padding: 15px 25px;
-            background: linear-gradient(45deg, #00f5ff, #0080ff);
-            border: none;
-            border-radius: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin: 20px 0;
+            min-height: 100vh;
         }
-
-        .btn-recomendacion:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0, 245, 255, 0.3);
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
-
-        .recomendacion-resultado {
-            margin-top: 25px;
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .section {
+            background: rgba(255, 255, 255, 0.05);
             padding: 20px;
-            background: rgba(0, 245, 255, 0.05);
-            border: 1px solid rgba(0, 245, 255, 0.2);
+            margin: 20px 0;
             border-radius: 15px;
-            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-
-        .recomendacion-resultado.show {
-            display: block;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .recomendacion-header {
-            color: #00f5ff;
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .recomendacion-grid {
+        .input-group {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
-
-        .rec-card {
-            background: rgba(255,255,255,0.05);
-            padding: 15px;
-            border-radius: 10px;
-            border-left: 4px solid #00f5ff;
+        .input-field {
+            display: flex;
+            flex-direction: column;
         }
-
-        .rec-card h4 {
-            color: #00f5ff;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-
-        .rec-card .valor {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #ffffff;
+        label {
             margin-bottom: 5px;
+            font-weight: bold;
+            color: #e0e0e0;
         }
-
-        .rec-card .detalle {
-            font-size: 0.8rem;
-            color: #b0c4de;
+        input {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            font-size: 16px;
         }
-
-        .patron-distribucion {
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        .results {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            padding: 20px;
+            border-radius: 15px;
             margin: 20px 0;
+            color: white;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+        }
+        .terrain-viz {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            color: #333;
+        }
+        .formula {
+            background: rgba(0, 0, 0, 0.3);
             padding: 15px;
-            background: rgba(0,0,0,0.2);
             border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 18px;
+            text-align: center;
+            margin: 15px 0;
+            border-left: 4px solid #ffd700;
         }
-
-        .patron-distribucion h4 {
-            color: #FFD700;
-            margin-bottom: 10px;
-        }
-
-        .consideraciones {
-            margin-top: 20px;
-        }
-
-        .consideraciones h4 {
-            color: #FF6B6B;
-            margin-bottom: 10px;
-        }
-
-        .consideraciones ul {
-            list-style: none;
-            padding: 0;
-        }
-
-        .consideraciones li {
-            padding: 5px 0;
-            color: #b0c4de;
-        }
-
-        .consideraciones li:before {
-            content: "⚠️ ";
-            margin-right: 8px;
+        .calculation-steps {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🏞️ Sistema de Optimización de Iluminación Urbana</h1>
-            <p>Análisis Matemático Avanzado | Parque #3 - Larapa, Cusco</p>
+        <h1>🔆 Optimización de Iluminación</h1>
+        
+        <div class="section">
+            <h2>📏 Datos del Terreno</h2>
+            <div class="input-group">
+                <div class="input-field">
+                    <label>Largo del terreno (m):</label>
+                    <input type="number" id="largo" value="92.78" step="0.01">
+                </div>
+                <div class="input-field">
+                    <label>Ancho del terreno (m):</label>
+                    <input type="number" id="ancho" value="53.89" step="0.01">
+                </div>
+                <div class="input-field">
+                    <label>Altura de postes (m):</label>
+                    <input type="number" id="altura" value="4" step="0.1">
+                </div>
+                <div class="input-field">
+                    <label>Potencia relativa (P):</label>
+                    <input type="number" id="potencia" value="1000" step="50">
+                </div>
+                <div class="input-field">
+                    <label>Número de postes disponibles:</label>
+                    <input type="number" id="postesDisponibles" value="12" step="1" min="4">
+                </div>
+            </div>
+            <button onclick="calcular()">🧮 Calcular Distribución Óptima</button>
         </div>
 
-        <div class="dashboard">
-            <div class="controls-panel">
-                <h3>⚙️ Parámetros del Sistema</h3>
-                
-                <div class="control-group">
-                    <label>Altura de Postes (h)</label>
-                    <div class="slider-container">
-                        <input type="range" id="altura" min="3" max="10" value="4" step="0.5">
-                    </div>
-                    <div class="value-display" id="altura-display">4.0 metros</div>
-                </div>
-
-                <div class="control-group">
-                    <label>Potencia Lumínica (P)</label>
-                    <div class="slider-container">
-                        <input type="range" id="potencia" min="50" max="300" value="150" step="25">
-                    </div>
-                    <div class="value-display" id="potencia-display">150 watts</div>
-                </div>
-
-                <div class="control-group">
-                    <label>Umbral Mínimo de Iluminación</label>
-                    <div class="slider-container">
-                        <input type="range" id="umbral" min="15" max="40" value="25" step="5">
-                    </div>
-                    <div class="value-display" id="umbral-display">25% del máximo</div>
-                </div>
-
-                <div class="comparacion">
-                    <div class="comp-card">
-                        <h4>🔆 Postes Bajos</h4>
-                        <p>Alta intensidad central</p>
-                        <p>Cobertura limitada</p>
-                        <p id="eficiencia-bajo">Eficiencia: 68%</p>
-                    </div>
-                    <div class="comp-card">
-                        <h4>🏗️ Postes Altos</h4>
-                        <p>Distribución uniforme</p>
-                        <p>Mayor alcance</p>
-                        <p id="eficiencia-alto">Eficiencia: 89%</p>
-                    </div>
-                </div>
+        <div class="section">
+            <h2>📐 Modelo Matemático</h2>
+            <div class="formula">
+                I(x) = P / (x² + h²)
             </div>
-
-            <div class="simulation-area">
-                <h3 style="color: #00f5ff; margin-bottom: 15px;">🎯 Simulación en Tiempo Real</h3>
-                <div class="parque" id="parque"></div>
+            <div class="formula">
+                I'(x) = -2Px / (x² + h²)²
             </div>
+            <p>Donde I(x) es la intensidad lumínica, P la potencia, h la altura del poste, y x la distancia horizontal.</p>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">📏</div>
-                <div class="stat-value" id="separacion-optima">6.9</div>
-                <div class="stat-label">Separación Óptima (metros)</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🔢</div>
-                <div class="stat-value" id="total-postes">56</div>
-                <div class="stat-label">Total de Postes Requeridos</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">⚡</div>
-                <div class="stat-value" id="intensidad-max">9.38</div>
-                <div class="stat-label">Intensidad Máxima (lux)</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-value" id="eficiencia-total">92.3</div>
-                <div class="stat-label">Eficiencia del Sistema (%)</div>
-            </div>
+        <div id="resultados" class="results" style="display: none;">
+            <h2>📊 Resultados del Cálculo</h2>
+            <div id="contenido-resultados"></div>
         </div>
 
-        <div class="dashboard">
-            <div class="ecuacion-panel">
-                <h3>📐 Modelo Matemático Aplicado</h3>
-                
-                <div class="formula">
-                    <strong>Intensidad Lumínica:</strong> I(r) = P / (r² + h²)
-                </div>
-                <div class="formula">
-                    <strong>Derivada:</strong> I'(r) = -2Pr / (r² + h²)²
-                </div>
-                <div class="formula">
-                    <strong>Condición de Optimización:</strong> I'(0) = 0 → Máximo en r = 0
-                </div>
-                <div class="formula">
-                    <strong>Separación Calculada:</strong> d = 2√(P/I_min - h²)
-                </div>
-                
-                <p style="margin-top: 20px; color: #b0c4de;">
-                    <strong>Análisis:</strong> A mayor altura (h), menor intensidad máxima pero mayor cobertura. 
-                    La eficiencia del sistema mejora porque se requieren menos postes para cubrir la misma área, 
-                    manteniendo el umbral mínimo de iluminación.
-                </p>
+        <div class="chart-container">
+            <canvas id="intensityChart" width="400" height="200"></canvas>
+        </div>
 
-                <div class="eficiencia-bar">
-                    <div class="eficiencia-indicator" id="eficiencia-indicator"></div>
-                </div>
-                <p style="text-align: center; margin-top: 10px; color: #00f5ff;">
-                    Eficiencia vs Altura: <span id="relacion-eficiencia">Relación Directa</span>
-                </p>
-            </div>
-
-            <div class="recomendaciones-panel">
-                <h3>🎯 Sistema de Recomendaciones Inteligentes</h3>
-                
-                <div class="terreno-selector">
-                    <label>Tipo de Terreno/Área:</label>
-                    <select id="tipo-terreno">
-                        <option value="parque">🏞️ Parque Público</option>
-                        <option value="plaza">🏛️ Plaza Central</option>
-                        <option value="calle">🛣️ Calle Residencial</option>
-                        <option value="avenida">🚗 Avenida Principal</option>
-                        <option value="estacionamiento">🚗 Estacionamiento</option>
-                        <option value="deportivo">⚽ Campo Deportivo</option>
-                        <option value="comercial">🏪 Zona Comercial</option>
-                        <option value="industrial">🏭 Zona Industrial</option>
-                    </select>
-                </div>
-
-                <div class="dimensiones-input">
-                    <div class="dimension-group">
-                        <label>Largo (metros):</label>
-                        <input type="number" id="largo" value="70" min="10" max="500">
-                    </div>
-                    <div class="dimension-group">
-                        <label>Ancho (metros):</label>
-                        <input type="number" id="ancho" value="75" min="10" max="500">
-                    </div>
-                </div>
-
-                <button id="generar-recomendacion" class="btn-recomendacion">
-                    🔮 Generar Recomendación Personalizada
-                </button>
-
-                <div id="recomendacion-resultado" class="recomendacion-resultado">
-                    <!-- Aquí se mostrarán las recomendaciones -->
-                </div>
-            </div>
+        <div class="terrain-viz">
+            <h3>🗺️ Visualización del Terreno</h3>
+            <canvas id="terrainCanvas" width="600" height="400" style="border: 2px solid #333; border-radius: 10px;"></canvas>
         </div>
     </div>
 
     <script>
-        function calcularSistema() {
-            const h = parseFloat(document.getElementById('altura').value);
-            const P = parseFloat(document.getElementById('potencia').value);
-            const umbralPorcentaje = parseFloat(document.getElementById('umbral').value);
-            
-            // Actualizar displays
-            document.getElementById('altura-display').textContent = h.toFixed(1) + ' metros';
-            document.getElementById('potencia-display').textContent = P + ' watts';
-            document.getElementById('umbral-display').textContent = umbralPorcentaje + '% del máximo';
-            
-            // Cálculos matemáticos precisos
-            const intensidadMaxima = P / (h * h); // I(0) = P/h²
-            const intensidadMinima = intensidadMaxima * (umbralPorcentaje / 100);
-            
-            // Resolver: P/(r² + h²) = intensidadMinima para encontrar r máximo
-            const rMaximo = Math.sqrt(Math.max(0, P / intensidadMinima - h * h));
-            const separacionOptima = 2 * rMaximo; // Diámetro del círculo de cobertura
-            
-            // Calcular eficiencia del sistema
-            const areaCobertura = Math.PI * rMaximo * rMaximo;
-            const eficienciaAltura = Math.min(100, (h / 10) * 100 + 20); // Postes altos son más eficientes
-            const eficienciaDistribucion = Math.min(100, (separacionOptima / 15) * 80 + 20);
-            const eficienciaTotal = (eficienciaAltura + eficienciaDistribucion) / 2;
-            
-            // Estadísticas del parque (70m x 75m = 5,250 m²)
-            const areaParque = 70 * 75;
-            const postesX = Math.ceil(70 / separacionOptima) + 1;
-            const postesY = Math.ceil(75 / separacionOptima) + 1;
-            const totalPostes = postesX * postesY;
-            
-            // Actualizar estadísticas
-            document.getElementById('separacion-optima').textContent = separacionOptima.toFixed(1);
-            document.getElementById('total-postes').textContent = totalPostes;
-            document.getElementById('intensidad-max').textContent = intensidadMaxima.toFixed(2);
-            document.getElementById('eficiencia-total').textContent = eficienciaTotal.toFixed(1);
-            
-            // Actualizar comparación
-            const eficienciaBajo = Math.max(40, 100 - h * 8);
-            const eficienciaAlto = Math.min(95, 60 + h * 5);
-            document.getElementById('eficiencia-bajo').textContent = `Eficiencia: ${eficienciaBajo.toFixed(0)}%`;
-            document.getElementById('eficiencia-alto').textContent = `Eficiencia: ${eficienciaAlto.toFixed(0)}%`;
-            
-            // Indicador de eficiencia
-            const indicador = document.getElementById('eficiencia-indicator');
-            indicador.style.left = (eficienciaTotal) + '%';
-            
-            // Relación eficiencia-altura
-            const relacion = h > 6 ? 'Óptima' : h > 4 ? 'Buena' : 'Mejorable';
-            document.getElementById('relacion-eficiencia').textContent = relacion;
-            
-            // Generar visualización
-            generarVisualizacion(h, P, separacionOptima, intensidadMaxima, rMaximo);
-        }
+        let chartInstance = null;
 
-        function generarVisualizacion(h, P, separacion, intensidadMax, rMax) {
-            const parque = document.getElementById('parque');
-            parque.innerHTML = '';
-            
-            const anchoParque = parque.offsetWidth;
-            const altoParque = parque.offsetHeight;
-            
-            // Escala: ancho = 70m (parque real)
-            const escala = anchoParque / 70;
-            const separacionPx = separacion * escala;
-            const rMaxPx = rMax * escala;
-            
-            // Generar grilla optimizada
-            for (let x = separacionPx/2; x < anchoParque; x += separacionPx) {
-                for (let y = separacionPx/2; y < altoParque; y += separacionPx) {
-                    // Crear zonas de iluminación (múltiples anillos)
-                    crearZonasIluminacion(parque, x, y, rMaxPx, h, P, intensidadMax);
-                    
-                    // Crear poste físico
-                    crearPosteAvanzado(parque, x, y, h);
-                }
-            }
-        }
-
-        function crearZonasIluminacion(parque, x, y, rMax, h, P, intensidadMax) {
-            // Crear 6 anillos concéntricos para mostrar degradado realista
-            for (let i = 1; i <= 6; i++) {
-                const radio = (rMax * i) / 6;
-                const distanciaReal = (radio * 70) / parque.offsetWidth; // Convertir a metros
-                
-                // Calcular intensidad real en esta distancia
-                const intensidad = P / (distanciaReal * distanciaReal + h * h);
-                const porcentajeIntensidad = intensidad / intensidadMax;
-                
-                const zona = document.createElement('div');
-                zona.className = 'zona-luz';
-                zona.style.left = x + 'px';
-                zona.style.top = y + 'px';
-                zona.style.width = (radio * 2) + 'px';
-                zona.style.height = (radio * 2) + 'px';
-                
-                // Color y opacidad basados en intensidad real
-                let color, alpha;
-                if (porcentajeIntensidad > 0.7) {
-                    color = '255, 215, 0'; // Dorado brillante
-                    alpha = 0.4;
-                } else if (porcentajeIntensidad > 0.4) {
-                    color = '255, 165, 0'; // Naranja
-                    alpha = 0.3;
-                } else if (porcentajeIntensidad > 0.25) {
-                    color = '255, 140, 0'; // Naranja oscuro
-                    alpha = 0.2;
-                } else {
-                    color = '255, 69, 0'; // Rojo suave
-                    alpha = 0.1;
-                }
-                
-                zona.style.background = `radial-gradient(circle, 
-                    rgba(${color}, ${alpha}) 0%, 
-                    rgba(${color}, ${alpha * 0.7}) 60%, 
-                    rgba(${color}, ${alpha * 0.3}) 80%, 
-                    transparent 100%)`;
-                
-                parque.appendChild(zona);
-            }
-        }
-
-        function crearPosteAvanzado(parque, x, y, altura) {
-            const poste = document.createElement('div');
-            poste.className = 'poste';
-            poste.style.left = x + 'px';
-            poste.style.top = y + 'px';
-            
-            // Estructura del poste proporcional a la altura
-            const estructura = document.createElement('div');
-            estructura.className = 'poste-estructura';
-            estructura.style.height = (15 + altura * 2) + 'px'; // Altura visual proporcional
-            
-            // Luminaria
-            const luminaria = document.createElement('div');
-            luminaria.className = 'poste-luminaria';
-            
-            // Añadir efecto de altura en la luminaria
-            const escalaLuminaria = Math.min(1.5, 0.8 + altura * 0.1);
-            luminaria.style.transform = `scale(${escalaLuminaria})`;
-            
-            poste.appendChild(estructura);
-            poste.appendChild(luminaria);
-            parque.appendChild(poste);
-        }
-
-        // Event listeners
-        document.getElementById('altura').addEventListener('input', calcularSistema);
-        document.getElementById('potencia').addEventListener('input', calcularSistema);
-        document.getElementById('umbral').addEventListener('input', calcularSistema);
-        document.getElementById('generar-recomendacion').addEventListener('click', generarRecomendacion);
-        
-        // Inicialización
-        calcularSistema();
-
-        function generarRecomendacion() {
-            const tipoTerreno = document.getElementById('tipo-terreno').value;
+        function calcular() {
             const largo = parseFloat(document.getElementById('largo').value);
             const ancho = parseFloat(document.getElementById('ancho').value);
+            const h = parseFloat(document.getElementById('altura').value);
+            const P = parseFloat(document.getElementById('potencia').value);
+            const postesDisponibles = parseInt(document.getElementById('postesDisponibles').value);
+
+            // Calcular distribución óptima con 12 postes
+            // Probar diferentes configuraciones rectangulares
+            let mejorConfig = null;
+            let mejorCobertura = 0;
             
-            const area = largo * ancho;
-            
-            // Configuraciones predefinidas por tipo de terreno
-            const configuraciones = {
-                parque: {
-                    nombre: "Parque Público",
-                    icono: "🏞️",
-                    alturaRecomendada: [4, 6],
-                    potenciaRecomendada: [100, 150],
-                    umbralMinimo: 20,
-                    densidad: 1.5, // postes por 100m²
-                    consideraciones: [
-                        "Priorizar zonas de tránsito peatonal",
-                        "Iluminación suave para ambiente relajante",
-                        "Evitar contaminación lumínica excesiva",
-                        "Considerar flora existente para ubicación"
-                    ]
-                },
-                plaza: {
-                    nombre: "Plaza Central",
-                    icono: "🏛️",
-                    alturaRecomendada: [5, 8],
-                    potenciaRecomendada: [150, 250],
-                    umbralMinimo: 30,
-                    densidad: 2.0,
-                    consideraciones: [
-                        "Iluminación central más intensa",
-                        "Resaltar elementos arquitectónicos",
-                        "Seguridad nocturna prioritaria",
-                        "Distribución simétrica recomendada"
-                    ]
-                },
-                calle: {
-                    nombre: "Calle Residencial",
-                    icono: "🛣️",
-                    alturaRecomendada: [6, 8],
-                    potenciaRecomendada: [80, 120],
-                    umbralMinimo: 25,
-                    densidad: 0.8,
-                    consideraciones: [
-                        "Distribución lineal en ambos lados",
-                        "Altura suficiente para vehículos",
-                        "Evitar deslumbramiento a viviendas",
-                        "Uniformidad en el recorrido"
-                    ]
-                },
-                avenida: {
-                    nombre: "Avenida Principal",
-                    icono: "🚗",
-                    alturaRecomendada: [8, 12],
-                    potenciaRecomendada: [200, 400],
-                    umbralMinimo: 35,
-                    densidad: 1.2,
-                    consideraciones: [
-                        "Alta intensidad para tráfico vehicular",
-                        "Postes altos para amplia cobertura",
-                        "Separación mayor entre postes",
-                        "Iluminación de carriles y aceras"
-                    ]
-                },
-                estacionamiento: {
-                    nombre: "Estacionamiento",
-                    icono: "🚗",
-                    alturaRecomendada: [4, 6],
-                    potenciaRecomendada: [100, 180],
-                    umbralMinimo: 30,
-                    densidad: 2.5,
-                    consideraciones: [
-                        "Iluminación uniforme para seguridad",
-                        "Evitar zonas de sombra entre vehículos",
-                        "Altura moderada para mantenimiento",
-                        "Distribución en grilla rectangular"
-                    ]
-                },
-                deportivo: {
-                    nombre: "Campo Deportivo",
-                    icono: "⚽",
-                    alturaRecomendada: [12, 20],
-                    potenciaRecomendada: [400, 1000],
-                    umbralMinimo: 50,
-                    densidad: 0.5,
-                    consideraciones: [
-                        "Iluminación profesional alta intensidad",
-                        "Postes perimetrales para evitar sombras",
-                        "Cumplir normativas deportivas",
-                        "Minimizar deslumbramiento a jugadores"
-                    ]
-                },
-                comercial: {
-                    nombre: "Zona Comercial",
-                    icono: "🏪",
-                    alturaRecomendada: [6, 10],
-                    potenciaRecomendada: [150, 300],
-                    umbralMinimo: 35,
-                    densidad: 3.0,
-                    consideraciones: [
-                        "Iluminación atractiva para comercios",
-                        "Seguridad para peatones nocturnos",
-                        "Integración con iluminación comercial",
-                        "Mayor densidad en zonas de alto tráfico"
-                    ]
-                },
-                industrial: {
-                    nombre: "Zona Industrial",
-                    icono: "🏭",
-                    alturaRecomendada: [8, 15],
-                    potenciaRecomendada: [200, 500],
-                    umbralMinimo: 40,
-                    densidad: 1.0,
-                    consideraciones: [
-                        "Resistencia a condiciones industriales",
-                        "Iluminación funcional, no decorativa",
-                        "Acceso para vehículos pesados",
-                        "Mantenimiento simplificado"
-                    ]
+            for (let filas = 1; filas <= postesDisponibles; filas++) {
+                if (postesDisponibles % filas === 0) {
+                    const columnas = postesDisponibles / filas;
+                    const distanciaLargo = largo / (columnas - 1);
+                    const distanciaAncho = ancho / (filas - 1);
+                    
+                    // Calcular cobertura mínima
+                    const intensidadMinLargo = P / (Math.pow(distanciaLargo/2, 2) + h*h);
+                    const intensidadMinAncho = P / (Math.pow(distanciaAncho/2, 2) + h*h);
+                    const coberturaTotal = Math.min(intensidadMinLargo, intensidadMinAncho);
+                    
+                    if (coberturaTotal > mejorCobertura) {
+                        mejorCobertura = coberturaTotal;
+                        mejorConfig = {
+                            filas: filas,
+                            columnas: columnas,
+                            distanciaLargo: distanciaLargo,
+                            distanciaAncho: distanciaAncho
+                        };
+                    }
                 }
-            };
+            }
             
-            const config = configuraciones[tipoTerreno];
+            const postesLargo = mejorConfig.columnas;
+            const postesAncho = mejorConfig.filas;
+            const totalPostes = postesDisponibles;
             
-            // Calcular recomendaciones específicas
-            const alturaOptima = config.alturaRecomendada[0] + 
-                               (area > 5000 ? (config.alturaRecomendada[1] - config.alturaRecomendada[0]) * 0.7 : 0);
+            // Calcular distancia real entre postes
+            const distanciaRealLargo = mejorConfig.distanciaLargo;
+            const distanciaRealAncho = mejorConfig.distanciaAncho;
             
-            const potenciaOptima = config.potenciaRecomendada[0] + 
-                                 (area > 3000 ? (config.potenciaRecomendada[1] - config.potenciaRecomendada[0]) * 0.6 : 0);
+            // Calcular intensidades clave
+            const intensidadMaxima = P / (h * h);
+            const intensidadCentroLargo = P / (Math.pow(distanciaRealLargo/2, 2) + h*h);
+            const intensidadCentroAncho = P / (Math.pow(distanciaRealAncho/2, 2) + h*h);
+            const intensidadMinima = Math.min(intensidadCentroLargo, intensidadCentroAncho);
+            const porcentajeMinimo = (intensidadMinima / intensidadMaxima) * 100;
             
-            // Cálculos usando el modelo matemático
-            const intensidadMax = potenciaOptima / (alturaOptima * alturaOptima);
-            const intensidadMin = intensidadMax * (config.umbralMinimo / 100);
-            const rMaximo = Math.sqrt(Math.max(0, potenciaOptima / intensidadMin - alturaOptima * alturaOptima));
-            const separacionOptima = 2 * rMaximo;
+            // Evaluar si la cobertura es aceptable
+            const distanciaOptimaIdeal = 2 * h;
+            const cumpleOptimo = Math.max(distanciaRealLargo, distanciaRealAncho) <= distanciaOptimaIdeal;
+
+            const resultadosDiv = document.getElementById('resultados');
+            const contenidoDiv = document.getElementById('contenido-resultados');
             
-            const postesX = Math.ceil(largo / separacionOptima) + 1;
-            const postesY = Math.ceil(ancho / separacionOptima) + 1;
-            const totalPostes = postesX * postesY;
-            
-            const costoEstimado = totalPostes * (200 + alturaOptima * 50 + potenciaOptima * 2);
-            const consumoMensual = totalPostes * potenciaOptima * 12 * 30 / 1000; // kWh
-            
-            // Mostrar recomendación
-            const resultado = document.getElementById('recomendacion-resultado');
-            resultado.innerHTML = `
-                <div class="recomendacion-header">
-                    ${config.icono} Recomendación para ${config.nombre}
-                    <span style="font-size: 0.9rem; color: #b0c4de;">(${largo}m × ${ancho}m = ${area.toLocaleString()} m²)</span>
+            contenidoDiv.innerHTML = `
+                <div class="calculation-steps">
+                    <h3>${cumpleOptimo ? '✅' : '⚠️'} Distribución con ${postesDisponibles} Postes</h3>
+                    <p><strong>Configuración óptima:</strong> ${postesAncho} filas × ${postesLargo} columnas</p>
+                    <p><strong>Criterio ideal:</strong> d ≤ 2h = ${distanciaOptimaIdeal}m</p>
                 </div>
                 
-                <div class="recomendacion-grid">
-                    <div class="rec-card">
-                        <h4>📏 ALTURA ÓPTIMA</h4>
-                        <div class="valor">${alturaOptima.toFixed(1)}m</div>
-                        <div class="detalle">Rango: ${config.alturaRecomendada[0]}-${config.alturaRecomendada[1]}m</div>
-                    </div>
-                    
-                    <div class="rec-card">
-                        <h4>⚡ POTENCIA</h4>
-                        <div class="valor">${Math.round(potenciaOptima)}W</div>
-                        <div class="detalle">Por poste LED</div>
-                    </div>
-                    
-                    <div class="rec-card">
-                        <h4>📐 SEPARACIÓN</h4>
-                        <div class="valor">${separacionOptima.toFixed(1)}m</div>
-                        <div class="detalle">Entre postes</div>
-                    </div>
-                    
-                    <div class="rec-card">
-                        <h4>🔢 CANTIDAD</h4>
-                        <div class="valor">${totalPostes}</div>
-                        <div class="detalle">Postes totales</div>
-                    </div>
-                    
-                    <div class="rec-card">
-                        <h4>💰 COSTO EST.</h4>
-                        <div class="valor">${(costoEstimado/1000).toFixed(0)}K</div>
-                        <div class="detalle">Instalación completa</div>
-                    </div>
-                    
-                    <div class="rec-card">
-                        <h4>🔋 CONSUMO</h4>
-                        <div class="valor">${consumoMensual.toFixed(0)}</div>
-                        <div class="detalle">kWh/mes</div>
-                    </div>
+                <div class="calculation-steps">
+                    <h3>📏 Distribución en el Terreno</h3>
+                    <p><strong>Terreno:</strong> ${largo}m × ${ancho}m (${(largo * ancho).toFixed(2)} m²)</p>
+                    <p><strong>Separación a lo largo:</strong> ${distanciaRealLargo.toFixed(2)}m ${distanciaRealLargo <= distanciaOptimaIdeal ? '✅' : '⚠️'}</p>
+                    <p><strong>Separación a lo ancho:</strong> ${distanciaRealAncho.toFixed(2)}m ${distanciaRealAncho <= distanciaOptimaIdeal ? '✅' : '⚠️'}</p>
+                    <p><strong>Total de postes:</strong> <span style="font-size: 1.2em; color: #ffd700;">${totalPostes} postes</span></p>
                 </div>
                 
-                <div class="patron-distribucion">
-                    <h4>🎯 Patrón de Distribución Recomendado</h4>
-                    <p><strong>Configuración:</strong> Grilla ${postesX} × ${postesY} postes</p>
-                    <p><strong>Cobertura:</strong> ${((rMaximo * Math.PI * totalPostes / area) * 100).toFixed(1)}% del área</p>
-                    <p><strong>Intensidad mínima:</strong> ${intensidadMin.toFixed(2)} lux (${config.umbralMinimo}% del máximo)</p>
+                <div class="calculation-steps">
+                    <h3>💡 Análisis de Cobertura</h3>
+                    <p><strong>Intensidad máxima (bajo el poste):</strong> I(0) = ${intensidadMaxima.toFixed(2)}</p>
+                    <p><strong>Intensidad mínima entre postes:</strong> ${intensidadMinima.toFixed(2)}</p>
+                    <p><strong>Porcentaje de cobertura mínima:</strong> ${porcentajeMinimo.toFixed(1)}%</p>
+                    ${porcentajeMinimo < 20 ? '<p style="color: #ff6b6b;"><strong>⚠️ Advertencia:</strong> La cobertura puede ser insuficiente en algunas zonas</p>' : ''}
                 </div>
                 
-                <div class="consideraciones">
-                    <h4>⚠️ Consideraciones Específicas</h4>
-                    <ul>
-                        ${config.consideraciones.map(item => `<li>${item}</li>`).join('')}
-                    </ul>
+                <div class="calculation-steps">
+                    <h3>📊 Recomendaciones</h3>
+                    ${cumpleOptimo ? 
+                        '<p style="color: #2ecc71;">✅ La distribución cumple con los criterios óptimos de iluminación</p>' : 
+                        `<p style="color: #f39c12;">⚠️ Para mejor cobertura, considera:</p>
+                         <ul>
+                            <li>Aumentar la altura de los postes a ${Math.ceil(Math.max(distanciaRealLargo, distanciaRealAncho)/2)}m</li>
+                            <li>O usar postes de mayor potencia</li>
+                            <li>Postes ideales necesarios: ${Math.ceil(largo/distanciaOptimaIdeal) * Math.ceil(ancho/distanciaOptimaIdeal)}</li>
+                         </ul>`
+                    }
                 </div>
             `;
             
-            resultado.classList.add('show');
+            resultadosDiv.style.display = 'block';
             
-            // Actualizar controles con valores recomendados
-            document.getElementById('altura').value = alturaOptima.toFixed(1);
-            document.getElementById('potencia').value = Math.round(potenciaOptima);
-            document.getElementById('umbral').value = config.umbralMinimo;
+            // Crear gráfico de intensidad
+            crearGraficoIntensidad(h, P, Math.max(distanciaRealLargo, distanciaRealAncho));
             
-            // Recalcular sistema con nuevos valores
-            calcularSistema();
+            // Visualizar terreno
+            visualizarTerreno(largo, ancho, postesLargo, postesAncho);
         }
+
+        function crearGraficoIntensidad(h, P, distanciaOptima) {
+            const ctx = document.getElementById('intensityChart').getContext('2d');
+            
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+            
+            const xValues = [];
+            const yValues = [];
+            
+            for (let x = 0; x <= distanciaOptima * 2; x += 0.1) {
+                xValues.push(x);
+                yValues.push(P / (x * x + h * h));
+            }
+            
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: xValues,
+                    datasets: [{
+                        label: 'Intensidad I(x)',
+                        data: yValues,
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }, {
+                        label: 'Distancia óptima',
+                        data: Array(xValues.length).fill(P / (distanciaOptima * distanciaOptima + h * h)),
+                        borderColor: '#ff6b6b',
+                        borderDash: [5, 5],
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Función de Intensidad Lumínica I(x) = P/(x² + h²)',
+                            color: '#333',
+                            font: { size: 16 }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Distancia horizontal (m)',
+                                color: '#333'
+                            },
+                            ticks: { color: '#333' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Intensidad lumínica',
+                                color: '#333'
+                            },
+                            ticks: { color: '#333' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function visualizarTerreno(largo, ancho, postesLargo, postesAncho) {
+            const canvas = document.getElementById('terrainCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Configurar escala
+            const margin = 40;
+            const escalaX = (canvas.width - 2 * margin) / largo;
+            const escalaY = (canvas.height - 2 * margin) / ancho;
+            const escala = Math.min(escalaX, escalaY);
+            
+            const anchoViz = largo * escala;
+            const altoViz = ancho * escala;
+            const startX = (canvas.width - anchoViz) / 2;
+            const startY = (canvas.height - altoViz) / 2;
+            
+            // Dibujar terreno
+            ctx.fillStyle = '#e8f5e8';
+            ctx.fillRect(startX, startY, anchoViz, altoViz);
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(startX, startY, anchoViz, altoViz);
+            
+            // Dibujar postes
+            ctx.fillStyle = '#f39c12';
+            const radioPoste = 4;
+            
+            for (let i = 0; i < postesLargo; i++) {
+                for (let j = 0; j < postesAncho; j++) {
+                    const x = startX + (i * anchoViz / (postesLargo - 1));
+                    const y = startY + (j * altoViz / (postesAncho - 1));
+                    
+                    ctx.beginPath();
+                    ctx.arc(x, y, radioPoste, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Círculo de cobertura
+                    ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 16 * escala, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+            }
+            
+            // Etiquetas
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = '12px Arial';
+            ctx.fillText(`${largo}m`, startX + anchoViz/2 - 15, startY + altoViz + 20);
+            ctx.save();
+            ctx.translate(startX - 20, startY + altoViz/2);
+            ctx.rotate(-Math.PI/2);
+            ctx.fillText(`${ancho}m`, -15, 0);
+            ctx.restore();
+        }
+
+        // Cálculo inicial
+        calcular();
     </script>
 </body>
 </html>
